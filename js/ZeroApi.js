@@ -1,12 +1,25 @@
 'use strict';
 
-/**
+/*******************************************************************************
+ *
+ * Copyright (c) 2018 Decentralization Authority MDAO.
+ * Released under the MIT License.
+ *
  * ZeroApi
  *
  * Primary framework necessary to manage message communications between
  * the sandboxed (iFrame) web document and the Zeronet client.
- *
  * Derived from the original ZeroFrame.js (as included in ZeroNet core).
+ *
+ * In development are 3 stubs for supporting decentralized networks:
+ *     1. BitMessage
+ *     2. IFPS
+ *     3. Ethereum Web3
+ *
+ * Version 18.9.28
+ *
+ * Web   : https://d14na.org
+ * Email : support@d14na.org
  */
 (function () {
     /* Initialize the ZeroApi object (class). */
