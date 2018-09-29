@@ -154,21 +154,25 @@ class ZeroApi {
      * Event messages received in real-time are managed here.
      */
     onEvent(_event, _message) {
-        return this._log(`Unknown event [ ${_event} ]`, _message)
+        this._log(`Unknown event [ ${_event} ]`, _message)
     }
 
     /**
      * WebSocket Connection Opened
      */
     onOpen() {
-        return this._log('WebSocket connected successfully.')
+        this._log('WebSocket connected successfully.')
+
+        /* Initialize the mobile viewport. */
+        this.cmd('wrapperSetViewport', 'width=device-width, initial-scale=1.0')
+        this._log('Viewport initialized (for mobile support).')
     }
 
     /**
      * WebSocket Connection Closed
      */
     onClose() {
-        return this._log('WebSocket has been disconnected.')
+        this._log('WebSocket has been disconnected.')
     }
 
     /**
