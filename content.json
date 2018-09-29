@@ -2,7 +2,7 @@
  "address": "1ZAPi2PKad9dz9wqvwiDudzz5dCacxt3w",
  "address_index": 14886911,
  "background-color": "#FFF",
- "description": "ZeroAPI allows developers to easily deliver the rich, real-time content they need for powering even the most demanding DApps.",
+ "description": "ZeroAPI allows developers to easily deliver the rich, real-time content they need for powering even the most demanding ZApps (and DApps).",
  "favicon": "images/favicon.png",
  "files": {
   "LICENSE": {
@@ -26,17 +26,21 @@
    "size": 19984
   },
   "index.html": {
-   "sha512": "0219b6af7ac7e93578d2c801e3da8569ad5a6ff64989e0ccf23ffe5bc7871cec",
-   "size": 5049
+   "sha512": "dd8ec74927840fa88c6b163e5b5eb5866cd91b7824f993c038752c55be74b647",
+   "size": 5066
+  },
+  "js/ZeroApi.js": {
+   "sha512": "8e262f8339de20e89475816675324b60bfb50cdd7811f4da91c25046c71337f4",
+   "size": 5998
   }
  },
  "ignore": "(\\.git)",
  "inner_path": "content.json",
- "modified": 1536235523,
+ "modified": 1538166343,
  "postmessage_nonce_security": true,
  "signers_sign": "GzuVlCH+hxtXBuj88Y3OecPY5EPFrelQrcg/ds2ErUOZEGiLXrV8M1UE1YmICz3kBfsPIdHyKcsGoMJpV9xq/kw=",
  "signs": {
-  "1ZAPi2PKad9dz9wqvwiDudzz5dCacxt3w": "HPBZohkq+o0EHl8q1E3vvCBeaknir5AATyUnYOlIfNQKNT6hIsZ5VQkOCMJ6sfjYMOdXxNeNyQxJ7L5VIWb0vec="
+  "1ZAPi2PKad9dz9wqvwiDudzz5dCacxt3w": "G1wt8hzXS0EdXi+MpDdiF6/vpzCCWY5WS9RmO2A2N82leRnO5DeJjz9sNTCkKImjAjX+2b1ggK+PNhvceR80q2I="
  },
  "signs_required": 1,
  "title": "ZeroAPI",

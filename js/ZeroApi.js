@@ -13,11 +13,18 @@
     const ZeroApi = (function () {
         /* Constructor. */
         function ZeroApi(url) {
-            /* Bind primary functions to `this`. */
-            this.route = this.route.bind(this)
+            /* Bind private (class) functions to `this`. */
+            this._init = this._init.bind(this)
+            this._connect = this._connect.bind(this)
+            this._send = this._send.bind(this)
+            this._response = this._response.bind(this)
+
+            /* Bind public (class) functions to `this`. */
+            this.cmd = this.cmd.bind(this)
+            this.onEvent = this.onEvent.bind(this)
+            this.onOpen = this.onOpen.bind(this)
+            this.onClose = this.onClose.bind(this)
             this.onMessage = this.onMessage.bind(this)
-            this.onCloseWebSocket = this.onCloseWebSocket.bind(this)
-            this.onOpenWebSocket = this.onOpenWebSocket.bind(this)
 
             /* Initialize data/object holders. */
             this.url = url
@@ -28,19 +35,31 @@
             this.wrapper_nonce = document.location.href.replace(/.*wrapper_nonce=([A-Za-z0-9]+).*/, '$1')
 
             /* Initiate parent connection. */
-            this.connect()
+            this._connect()
 
             /* Complete initialization process. */
-            this.init()
+            this._init()
+        }
+
+        /**
+         * Add Log
+         *
+         * Adds a new log entry to the debugging console.
+         */
+        ZeroApi.prototype._log = function () {
+            let args
+            args = 1 <= arguments.length ? [].slice.call(arguments, 0) : []
+
+            return console.log.apply(console, ['[ZeroApi]'].concat([].slice.call(args)))
         }
 
         /* Initialize and retrieve the main object (class). */
-        ZeroApi.prototype.init = function () {
+        ZeroApi.prototype._init = function () {
             return this
         }
 
         /* Initialize the (communications) connection to the parent window. */
-        ZeroApi.prototype.connect = function () {
+        ZeroApi.prototype._connect = function () {
             /* Set the target to the window's parent. */
             this.target = window.parent
 
@@ -49,6 +68,95 @@
 
             /* Send ready command. */
             return this.cmd('innerReady')
+        }
+
+        /**
+         * Send Message
+         *
+         * Message handler.
+         */
+        ZeroApi.prototype._send = function (_message, _callback) {
+            if (_callback === null) {
+                _callback = null
+            }
+
+            _message.wrapper_nonce = this.wrapper_nonce
+            _message.id = this.next_message_id
+
+            /* Increment message id. */
+            this.next_message_id += 1
+
+            /* Post message to target (parent window). */
+            this.target.postMessage(_message, '*')
+
+            if (_callback) {
+                /* Save this callback to pending callbacks holder. */
+                return this.pendingCbs[_message.id] = _callback
+            }
+        }
+
+        /**
+         * Response
+         *
+         * Outgoing message handler.
+         */
+        ZeroApi.prototype._response = function (to, result) {
+            /* Initialize command. */
+            const cmd = 'response'
+
+            return this._send({ cmd, to, result })
+        }
+
+        /**
+         * Execute Command (Make Request)
+         *
+         * Send a command request to the client for processing.
+         */
+        ZeroApi.prototype.cmd = function (cmd, params, _cb) {
+            if (params === null) {
+                params = {}
+            }
+
+            /* Send with (promise) callback. */
+            if (typeof _cb === 'undefined') {
+                return new Promise((_resolve, _reject) => {
+                    this._send({ cmd, params }, (_res) => {
+                        if (_res && _res.error) {
+                            _reject(_res.error)
+                        } else {
+                            _resolve(_res)
+                        }
+                    })
+                })
+            }
+
+            /* Send with (legacy) callback. */
+            // NOTE Callbacks have been deprecated.
+            //      Please migrate all code to (async/await) promises.
+            return this._send({ cmd, params }, _cb)
+        }
+
+        /**
+         * Event Received
+         *
+         * Event messages received in real-time are managed here.
+         */
+        ZeroApi.prototype.onEvent = function (_event, _message) {
+            return this._log(`Unknown event [ ${_event} ]`, _message)
+        }
+
+        /**
+         * WebSocket Connection Opened
+         */
+        ZeroApi.prototype.onOpen = function () {
+            return this._log('WebSocket connected successfully.')
+        }
+
+        /**
+         * WebSocket Connection Closed
+         */
+        ZeroApi.prototype.onClose = function () {
+            return this._log('WebSocket has been disconnected.')
         }
 
         /**
@@ -73,113 +181,47 @@
             } else if (cmd === 'wrapperReady') {
                 return this.cmd('innerReady')
             } else if (cmd === 'ping') {
-                return this.response(message.id, 'pong')
+                return this._response(message.id, 'pong')
             } else if (cmd === 'wrapperOpenedWebsocket') {
-                return this.onOpenWebSocket()
+                return this.onOpen()
             } else if (cmd === 'wrapperClosedWebsocket') {
-                return this.onCloseWebSocket()
+                return this.onClose()
             } else {
-                return this.route(cmd, message)
+                return this.onEvent(cmd, message)
             }
         }
 
         /**
-         * Route
-         *
-         * Messages received in real-time are managed here.
+         * BitMessage Stub
          */
-        ZeroApi.prototype.route = function (_cmd, _message) {
-            return this._log(`Unknown command [ ${_cmd} ]`, _message)
-        }
-
-        /**
-         * Response
-         *
-         * Outgoing message handler.
-         */
-        ZeroApi.prototype.response = function (to, result) {
-            /* Initialize command. */
-            const cmd = 'response'
-
-            return this.send({ cmd, to, result })
-        }
-
-        /**
-         * Command (Request)
-         *
-         * Send a command request to the client for processing.
-         */
-        ZeroApi.prototype.cmd = function (cmd, params, _cb) {
-            if (params === null) {
-                params = {}
-            }
-
-            /* Send with (promise) callback. */
-            if (typeof _cb === 'undefined') {
+        ZeroApi.prototype.bm = {
+            ping: function () {
                 return new Promise((_resolve, _reject) => {
-                    this.send({ cmd, params }, (_res) => {
-                        if (_res && _res.error) {
-                            _reject(_res.error)
-                        } else {
-                            _resolve(_res)
-                        }
-                    })
+                    _resolve('pong')
                 })
             }
-
-            /* Send with callback. */
-            return this.send({ cmd, params }, _cb)
         }
 
         /**
-         * Send Message
-         *
-         * Message handler.
+         * IPFS Stub
          */
-        ZeroApi.prototype.send = function (_message, _callback) {
-            if (_callback === null) {
-                _callback = null
-            }
-
-            _message.wrapper_nonce = this.wrapper_nonce
-            _message.id = this.next_message_id
-
-            /* Increment message id. */
-            this.next_message_id += 1
-
-            /* Post message to target (parent window). */
-            this.target.postMessage(_message, '*')
-
-            if (_callback) {
-                /* Save this callback to pending callbacks holder. */
-                return this.pendingCbs[_message.id] = _callback
+        ZeroApi.prototype.ipfs = {
+            ping: function () {
+                return new Promise((_resolve, _reject) => {
+                    _resolve('pong')
+                })
             }
         }
 
         /**
-         * Add Log
-         *
-         * Adds a new log entry to the debugging console.
+         * Ethereum Web3 Stub
          */
-        ZeroApi.prototype._log = function () {
-            let args
-            args = 1 <= arguments.length ? [].slice.call(arguments, 0) : []
-
-            return console.log.apply(console, ['[ZeroApi]'].concat([].slice.call(args)))
-        }
-
-        /**
-         * WebSocket Opened
-         */
-        ZeroApi.prototype.onOpenWebSocket = function () {
-            return this._log('WebSocket opened successfully.')
-        }
-
-        /**
-         * WebSocket Closed
-         */
-        ZeroApi.prototype.onCloseWebSocket = function () {
-            return this._log('WebSocket has been closed.')
+        ZeroApi.prototype.web3 = {
+            ping: function () {
+                return new Promise((_resolve, _reject) => {
+                    _resolve('pong')
+                })
+            }
         }
 
         /* Return the localized ZeroApi object for assignment. */
